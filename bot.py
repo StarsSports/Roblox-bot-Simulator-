@@ -1,40 +1,71 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-import time
+from selenium.webdriver.chrome.options import Options
+import json, time, os
+
+# Load accounts
+with open("accounts.json") as f:
+    accounts = json.load(f)
+
+# Setup logging
+report = {}
+if not os.path.exists("screenshots"):
+    os.makedirs("screenshots")
 
 # Setup browser
-options = webdriver.ChromeOptions()
+options = Options()
+options.add_argument("--disable-blink-features=AutomationControlled")
 options.add_argument("--start-maximized")
-driver = webdriver.Chrome(options=options)
 
-# Step 1: Go to Roblox
-driver.get("https://www.roblox.com")
-time.sleep(3)
+for acc in accounts:
+    username = acc["username"]
+    password = acc["password"]
+    print(f"Logging in as {username}")
 
-# Step 2: Log in using cookie (manual step)
-# You’ll need to inject .ROBLOSECURITY cookie manually or use a pre-authenticated session
+    driver = webdriver.Chrome(options=options)
+    driver.get("https://www.roblox.com/login")
+    time.sleep(3)
 
-# Step 3: Search for user
-search = driver.find_element(By.NAME, "q")
-search.send_keys("misterxd72")
-search.send_keys(Keys.RETURN)
-time.sleep(3)
+    try:
+        # Fill login form
+        driver.find_element(By.ID, "login-username").send_keys(username)
+        driver.find_element(By.ID, "login-password").send_keys(password)
+        driver.find_element(By.ID, "login-button").click()
+        time.sleep(5)
 
-# Step 4: Click on profile
-driver.find_element(By.PARTIAL_LINK_TEXT, "misterxd72").click()
-time.sleep(3)
+        # CAPTCHA detection
+        if "captcha" in driver.page_source.lower():
+            print(f"{username} blocked by CAPTCHA.")
+            report[username] = "CAPTCHA Blocked"
+            driver.save_screenshot(f"screenshots/{username}_captcha.png")
+            input(f"🛑 Solve CAPTCHA for {username}, then press Enter to continue...")
+            time.sleep(5)
 
-# Step 5: Go to Creations tab
-driver.find_element(By.LINK_TEXT, "Creations").click()
-time.sleep(3)
+        # Check login success
+        if "home" in driver.current_url:
+            print(f"{username} logged in.")
+            driver.get("https://www.roblox.com/users/profile?username=misterxd72")
+            time.sleep(3)
+            try:
+                driver.find_element(By.PARTIAL_LINK_TEXT, "RPG Tower").click()
+                time.sleep(3)
+                report[username] = "Success"
+                driver.save_screenshot(f"screenshots/{username}_success.png")
+            except:
+                report[username] = "Game Not Found"
+                driver.save_screenshot(f"screenshots/{username}_gamefail.png")
+        else:
+            report[username] = "Login Failed"
+            driver.save_screenshot(f"screenshots/{username}_fail.png")
 
-# Step 6: Click on RPG Tower
-driver.find_element(By.PARTIAL_LINK_TEXT, "RPG Tower").click()
-time.sleep(3)
+    except Exception as e:
+        report[username] = f"Error: {str(e)}"
 
-# Step 7: Click Play
-driver.find_element(By.CLASS_NAME, "play-button").click()
-time.sleep(600)  # Stay in game for 10 minutes
+    driver.quit()
+    time.sleep(2)
 
-driver.quit()
+# Save report
+with open("report.json", "w") as f:
+    json.dump(report, f, indent=2)
+
+print("✅ Bot loop complete.")
