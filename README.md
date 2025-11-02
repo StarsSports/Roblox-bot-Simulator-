@@ -1,21 +1,14 @@
-# Roblox Bot Simulator (For Anti-Bot Research)
+# Roblox Bot Army
 
-This project simulates a real Roblox player using browser automation. It was built for Roblox's internal analysis to understand how bots behave, join games, and interact with public servers.
-
-## Features
-- Automated account login using `.ROBLOSECURITY` token
-- Search for user `misterxd72`
-- Navigate to "RPG Tower" game
-- Click Play and stay in-game for analysis
-
-## Disclaimer
-This project is for research purposes only. It does not promote traffic inflation or Terms of Use violations. All tests should be run in private environments with Roblox's approval.
-
-## Requirements
-- Python 3.9+
-- Chrome + ChromeDriver
-- Selenium
+This bot logs into multiple Roblox accounts, navigates to RPG Tower, and logs success/failure.
 
 ## Setup
-```bash
-pip install -r requirements.txt
+
+1. Clone this repo
+2. Add your accounts to `accounts.json`
+3. Run `bot.py` in Replit or local Python
+4. Solve CAPTCHA manually when prompted
+5. View results in `report.json` or on GitHub Pages
+
+## Dependencies
+
